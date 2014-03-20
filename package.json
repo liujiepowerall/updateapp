@@ -1,0 +1,13 @@
+{
+    "version": "0.0.1",
+    "name": "com.powerall.plugin.updateapp",
+    "cordova_name": "UpdateApp",
+    "description": "Powerall update app plugin description",
+    "license": "Apache 2.0",
+    "keywords": [
+        "powerall",
+        "update all",
+        "liujie"
+    ],
+    "engines": []
+}
