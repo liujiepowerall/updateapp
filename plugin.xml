@@ -11,7 +11,7 @@
     <license>Apache 2.0</license>
 	<keywords>powerall,updateapp,powerall</keywords>
 	
-	<js-module src="www/updateAppPlugin.js" name="UpdateAppPlugin">
+	<js-module src="www/UpdateAppPlugin.js" name="UpdateAppPlugin">
 		<clobbers target="updateApp" />
 	</js-module>
 
@@ -28,6 +28,7 @@
         </config-file>
 
         <source-file src="src/android/UpdateAppPlugin.java" target-dir="src/com/powerall/plugin/updateapp" />
+        <source-file src="update_app_strings.xml" target-dir="res/values" />
     </platform>  
 
 </plugin>
