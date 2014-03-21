@@ -1,12 +1,14 @@
-var updateAppPlugin =
-    { createEvent: function(successCallback, errorCallback,checkPath)
-        {
-            cordova.exec(
-                successCallback, // success callback function
-                errorCallback, // error callback function
-                'UpdateAppPlugins', // mapped to our native Java class called "CalendarPlugin"
-                'checkAndUpdate', // with this action name
-                [checkPath]
-            );
-        }
-    };
+var cordova = require('cordova'),
+    exec = require('cordova/exec');
+
+var UpdateAppPlugin = function() {
+
+};
+UpdateAppPlugin.prototype.checkAndUpdate = function(checkPath)
+{
+    exec(null, null, 'UpdateAppPlugin', 'checkAndUpdate', [checkPath]);
+};
+
+var updateApp = new UpdateAppPlugin();
+
+module.exports = updateApp;

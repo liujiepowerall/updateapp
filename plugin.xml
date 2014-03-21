@@ -6,26 +6,28 @@
     id="com.powerall.plugin.updateapp"
     version="0.0.1">
 
-    <name>UpdateApp</name>
-    <description>update app plugin description</description>
+    <name>UpdateAppPlugin</name>
+    <description>UpdateAppPlugin plugin description</description>
     <license>Apache 2.0</license>
-	<keywords>powerall,updateapp,liujie</keywords>
+	<keywords>powerall,updateapp,powerall</keywords>
 	
-	<js-module src="www/updateAppPlugin.js" name="updateAppPlugin"/>
+	<js-module src="www/UpdateAppPlugin.js" name="UpdateAppPlugin">
+		<clobbers target="updateApp" />
+	</js-module>
 
     <!-- android -->
     <platform name="android">
         <config-file target="res/xml/config.xml" parent="/*">
-           <feature name="UpdateAppPlugins">
-        			<param name="android-package" value="com.powerall.plugin.updateapp.UpdateAppPlugins" />
-    			 </feature>
+            <feature name="UpdateAppPlugin">
+                <param name="android-package" value="com.powerall.plugin.updateapp.UpdateAppPlugin"/>
+            </feature>
         </config-file>
 
         <config-file target="AndroidManifest.xml" parent="/*">
-					<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />			
+    		<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />			
         </config-file>
 
-        <source-file src="src/android/UpdateAppPlugins.java" target-dir="src/com/powerall/plugin/updateapp" />
+        <source-file src="src/android/UpdateAppPlugin.java" target-dir="src/com/powerall/plugin/updateapp" />
     </platform>  
 
 </plugin>

@@ -1,4 +1,4 @@
 updateapp
 =========
 
-updateapp plugin for phonegap
+auto update app plugin for phonegap
