@@ -19,20 +19,29 @@ import org.json.JSONObject;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
+import android.app.DownloadManager;
+import android.app.DownloadManager.Request;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnClickListener;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.webkit.MimeTypeMap;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import com.phonegap.ecommunity.R; 
 
 public class UpdateAppPlugin extends CordovaPlugin {
 
@@ -61,39 +70,62 @@ public class UpdateAppPlugin extends CordovaPlugin {
     private ProgressBar mProgress;
     private Dialog mDownloadDialog;
     
+    private SharedPreferences mPrefs;  
+    private DownloadManager mDownloadManager;
+    
+    private static final String DL_ID = "downloadId";  
 	@Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.mContext = cordova.getActivity();
         android.util.Log.d(TAG,"action=>"+action);
+        mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+        mPrefs.edit().clear().commit(); 
 		if (action.equals("checkAndUpdate")) {
 			callbackContext.success();
 			this.checkPath = args.getString(0);
-			android.util.Log.d(TAG,"checkPath1=>"+checkPath);
+			android.util.Log.d(TAG,"checkPath=>"+checkPath);
 			checkAndUpdate();
-    }else if(action.equals("getCurrentVersion")){
-        	//优化 缩短传输内容，减少流量
-//        	JSONObject obj = new JSONObject();
-//        	obj.put("versionCode", this.getCurrentVerCode());
-//        	obj.put("versionName", this.getCurrentVerName());
-        	callbackContext.success(this.getCurrentVerCode()+"");
-    }else if(action.equals("getServerVersion")){
-        	this.checkPath = args.getString(0);
-        	if(this.getServerVerInfo()){
-        		//优化 缩短传输内容，减少流量
-//        		JSONObject obj = new JSONObject();
-//            	obj.put("serverVersionCode", newVerCode);
-//            	obj.put("serverVersionName", newVerName);
-        		callbackContext.success(newVerCode+"");
-        	}else{
-        		callbackContext.error("can't connect to the server!please check [checkpath]");
-        	}
-        	
-        }
+    }
         return false;
     }
 
-
+	 private BroadcastReceiver receiver = new BroadcastReceiver() {   
+	        @Override   
+	        public void onReceive(Context context, Intent intent) {   
+	            Log.v("intent", ""+intent.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, 0));  
+	            queryDownloadStatus();   
+	        }   
+	    }; 
     
+	    private void queryDownloadStatus() {   
+	        DownloadManager.Query query = new DownloadManager.Query();   
+	        query.setFilterById(mPrefs.getLong(DL_ID, 0));   
+	        Cursor c = mDownloadManager.query(query);   
+	        if(c.moveToFirst()) {   
+	            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));   
+	            switch(status) {   
+	            case DownloadManager.STATUS_PAUSED:   
+	                Log.v("down", "STATUS_PAUSED");  
+	            case DownloadManager.STATUS_PENDING:   
+	                Log.v("down", "STATUS_PENDING");  
+	            case DownloadManager.STATUS_RUNNING:   
+	                Log.v("down", "STATUS_RUNNING");  
+	                break;   
+	            case DownloadManager.STATUS_SUCCESSFUL:   
+	                Log.v("down", "STATUS_SUCCESSFUL");  
+	                installApk();
+	                mContext.unregisterReceiver(receiver);  
+	                mPrefs.edit().clear().commit(); 
+	                break;   
+	            case DownloadManager.STATUS_FAILED:   
+	                Log.v("down", "STATUS_FAILED");  
+	                mDownloadManager.remove(mPrefs.getLong(DL_ID, 0));   
+	                mPrefs.edit().clear().commit(); 
+	                mContext.unregisterReceiver(receiver);  
+	                break;   
+	            }   
+	        }  
+	    }  
     /**
      * 检查更新
      */
@@ -181,10 +213,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
 			}
 		} catch (Exception e) {
 			Log.d(TAG,"error:"+e.toString());
-			Log.d(TAG,"return false");
 			return false;
 		} 
-		Log.d(TAG,"getServerVerInfo return true");
     	return true;
     	
     }
@@ -194,21 +224,25 @@ public class UpdateAppPlugin extends CordovaPlugin {
      */
     private void showNoticeDialog() {
     	Log.d(TAG,"showNoticeDialog");
-        // 构造对话框
-    	cancelUpdate = false;
+
         AlertDialog.Builder builder = new Builder(mContext);
-        builder.setTitle("update"/*R.string.soft_update_title*/);
-        builder.setMessage("update"/*R.string.soft_update_info*/);
-        // 更新
-        builder.setPositiveButton("update"/*R.string.soft_update_updatebtn*/, new OnClickListener(){
+        builder.setTitle(R.string.update_dialog_title);
+        String message = mContext.getResources().getString(R.string.update_dialog_message_current_version)
+        				+ getCurrentVerCode()
+        				+ mContext.getResources().getString(R.string.update_dialog_message_new_version)
+        				+ newVerCode
+        				+ mContext.getResources().getString(R.string.update_dialog_message_conform_update);
+        builder.setMessage(message);
+
+        builder.setPositiveButton(R.string.update_dialog_update_btn, new OnClickListener(){
             public void onClick(DialogInterface dialog, int which){
                 dialog.dismiss();
-                // 显示下载对话框
-                showDownloadDialog();
+                //showDownloadDialog();
+                mContext.registerReceiver(receiver, new IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE));  
+                downloadApk();
             }
         });
-        // 稍后更新
-        builder.setNegativeButton("later"/*R.string.soft_update_later*/, new OnClickListener(){
+        builder.setNegativeButton(R.string.update_dialog_cancel_btn, new OnClickListener(){
             public void onClick(DialogInterface dialog, int which){
                 dialog.dismiss();
             }
@@ -218,136 +252,52 @@ public class UpdateAppPlugin extends CordovaPlugin {
     }
 
     /**
-     * 显示软件下载对话框
-     */
-
-    private void showDownloadDialog()
-    {
-        // 构造软件下载对话框
-        AlertDialog.Builder builder = new Builder(mContext);
-        builder.setTitle("update"/*R.string.soft_updating*/);
-        // 给下载对话框增加进度条
-        /*
-        final LayoutInflater inflater = LayoutInflater.from(mContext);
-        View v = inflater.inflate(R.layout.softupdate_progress, null);
-        mProgress = (ProgressBar) v.findViewById(R.id.update_progress);
-        */
-        LinearLayout v = new LinearLayout(mContext);
-        mProgress = new ProgressBar(mContext);
-        v.addView(mProgress);
-        builder.setView(v);
-        // 取消更新
-        builder.setNegativeButton("cancel"/*R.string.soft_update_cance*/, new OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                // 设置取消状态
-                cancelUpdate = true;
-            }
-        });
-        mDownloadDialog = builder.create();
-        mDownloadDialog.show();
-        // 现在文件
-        downloadApk();
-    }
-
-    /**
      * 下载apk文件
      */
     private void downloadApk()
     {
         // 启动新线程下载软件
-        new downloadApkThread().start();
+        //new downloadApkThread().start();
+    	Log.e(TAG,"mPrefs.contains(DL_ID)=>"+mPrefs.contains(DL_ID));
+    	if(!mPrefs.contains(DL_ID)){
+    		deleteFile();
+    		mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);  
+            Uri resource = Uri.parse(downloadPath);   
+            DownloadManager.Request request = new DownloadManager.Request(resource);   
+            request.setAllowedNetworkTypes(Request.NETWORK_MOBILE | Request.NETWORK_WIFI);   
+            request.setAllowedOverRoaming(false);   
+
+            MimeTypeMap mimeTypeMap = MimeTypeMap.getSingleton();  
+            String mimeString = mimeTypeMap.getMimeTypeFromExtension(MimeTypeMap.getFileExtensionFromUrl(downloadPath)); 
+            Log.d(TAG,"mimeString=>"+mimeString);
+            request.setMimeType(mimeString);  
+
+            request.setNotificationVisibility (request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);  
+            request.setVisibleInDownloadsUi(true);  
+
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, newVerName); 
+            request.setTitle(mContext.getResources().getString(R.string.update_dialog_message_new_version) + newVerName); 
+            long id = mDownloadManager.enqueue(request);
+            mPrefs.edit().putLong(DL_ID, id).commit();   
+    	}else{
+    		queryDownloadStatus();
+    	}
+    	
     }
 
-    private Handler mHandler = new Handler()
-    {
-        public void handleMessage(Message msg)
-        {
-            switch (msg.what)
-            {
-            // 正在下载
-            case DOWNLOAD:
-                // 设置进度条位置
-            	Log.d(TAG,"progress=>"+progress);
-                mProgress.setProgress(progress);
-                break;
-            case DOWNLOAD_FINISH:
-                // 安装文件
-                installApk();
-                break;
-            default:
-                break;
-            }
-        };
-    };
-    
-    /**
-     * 下载文件线程
-     */
-	private class downloadApkThread extends Thread {
-		@Override
-		public void run() {
-			try {
-				// 判断SD卡是否存在，并且是否具有读写权限
-				if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
-					// 获得存储卡的路径
-					String sdpath = Environment.getExternalStorageDirectory()+ "/";
-					mSavePath = sdpath + "download";
-					Log.d(TAG,"mSavePath:"+mSavePath);
-					URL url = new URL(downloadPath);
-					// 创建连接
-					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-					conn.connect();
-					// 获取文件大小
-					int length = conn.getContentLength();
-					// 创建输入流
-					InputStream is = conn.getInputStream();
-
-					File file = new File(mSavePath);
-					// 判断文件目录是否存在
-					if (!file.exists()) {
-						file.mkdir();
-					}
-					File apkFile = new File(mSavePath, newVerName);
-					FileOutputStream fos = new FileOutputStream(apkFile);
-					int count = 0;
-					// 缓存
-					byte buf[] = new byte[1024];
-					// 写入到文件中
-					do {
-						int numread = is.read(buf);
-						count += numread;
-						// 计算进度条位置
-						progress = (int) (((float) count / length) * 100);
-						// 更新进度
-						mHandler.sendEmptyMessage(DOWNLOAD);
-						if (numread <= 0) {
-							// 下载完成
-							mHandler.sendEmptyMessage(DOWNLOAD_FINISH);
-							break;
-						}
-						// 写入文件
-						fos.write(buf, 0, numread);
-					} while (!cancelUpdate);// 点击取消就停止下载.
-					fos.close();
-					is.close();
-				}
-			} catch (MalformedURLException e) {
-				Log.d(TAG,"error:"+e.toString());
-			} catch (IOException e) {
-				Log.d(TAG,"error:"+e.toString());
-			}
-			// 取消下载对话框显示
-			mDownloadDialog.dismiss();
+    public void  deleteFile(){
+    	File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), newVerName);
+		if (apkfile.exists()) {
+			apkfile.delete();
 		}
-	};
-
+    }
 	/**
 	 * 安装APK文件
 	 */
 	private void installApk() {
-		File apkfile = new File(mSavePath, newVerName);
+		File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), newVerName);
 		if (!apkfile.exists()) {
+			Log.d(TAG,"error:the file is not exists");
 			return;
 		}
 		// 通过Intent安装APK文件
