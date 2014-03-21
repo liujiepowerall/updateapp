@@ -78,8 +78,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.mContext = cordova.getActivity();
         android.util.Log.d(TAG,"action=>"+action);
-        mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-        mPrefs.edit().clear().commit(); 
+        
 		if (action.equals("checkAndUpdate")) {
 			callbackContext.success();
 			this.checkPath = args.getString(0);
@@ -105,20 +104,20 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));   
 	            switch(status) {   
 	            case DownloadManager.STATUS_PAUSED:   
-	                Log.v("down", "STATUS_PAUSED");  
+	                Log.d(TAG, "STATUS_PAUSED");  
 	            case DownloadManager.STATUS_PENDING:   
-	                Log.v("down", "STATUS_PENDING");  
+	                Log.d(TAG, "STATUS_PENDING");  
 	            case DownloadManager.STATUS_RUNNING:   
-	                Log.v("down", "STATUS_RUNNING");  
+	                Log.d(TAG, "STATUS_RUNNING");  
 	                break;   
 	            case DownloadManager.STATUS_SUCCESSFUL:   
-	                Log.v("down", "STATUS_SUCCESSFUL");  
+	                Log.d(TAG, "STATUS_SUCCESSFUL");  
 	                installApk();
 	                mContext.unregisterReceiver(receiver);  
 	                mPrefs.edit().clear().commit(); 
 	                break;   
 	            case DownloadManager.STATUS_FAILED:   
-	                Log.v("down", "STATUS_FAILED");  
+	                Log.d(TAG, "STATUS_FAILED");  
 	                mDownloadManager.remove(mPrefs.getLong(DL_ID, 0));   
 	                mPrefs.edit().clear().commit(); 
 	                mContext.unregisterReceiver(receiver);  
@@ -258,10 +257,11 @@ public class UpdateAppPlugin extends CordovaPlugin {
     {
         // 启动新线程下载软件
         //new downloadApkThread().start();
+    	mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+    	mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
     	Log.e(TAG,"mPrefs.contains(DL_ID)=>"+mPrefs.contains(DL_ID));
     	if(!mPrefs.contains(DL_ID)){
-    		deleteFile();
-    		mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);  
+    		deleteFile();    		  
             Uri resource = Uri.parse(downloadPath);   
             DownloadManager.Request request = new DownloadManager.Request(resource);   
             request.setAllowedNetworkTypes(Request.NETWORK_MOBILE | Request.NETWORK_WIFI);   
