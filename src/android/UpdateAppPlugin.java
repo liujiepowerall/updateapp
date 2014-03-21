@@ -36,6 +36,7 @@ import android.widget.ProgressBar;
 
 public class UpdateAppPlugin extends CordovaPlugin {
 
+ private final String TAG = "UpdateAppPlugin";
 	/*版本号检查路径*/
 	private String checkPath;
 	/* 新版本号*/
@@ -63,11 +64,11 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	@Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.mContext = cordova.getActivity();
-        android.util.Log.d("abc","action=>"+action);
+        android.util.Log.d(TAG,"action=>"+action);
 		if (action.equals("checkAndUpdate")) {
 			callbackContext.success();
 			this.checkPath = args.getString(0);
-			android.util.Log.d("abc","checkPath1=>"+checkPath);
+			android.util.Log.d(TAG,"checkPath1=>"+checkPath);
 			checkAndUpdate();
     }else if(action.equals("getCurrentVersion")){
         	//优化 缩短传输内容，减少流量
@@ -99,7 +100,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     private void checkAndUpdate(){
     	if(getServerVerInfo()){  		
     		int currentVerCode = getCurrentVerCode();
-    		Log.d("abc","newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
     		if(newVerCode>currentVerCode){
     			this.showNoticeDialog();
     		}
@@ -156,7 +157,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
      * @throws Exception
      */
     private boolean getServerVerInfo(){
-    	Log.d("abc","getServerVerInfo");
+    	Log.d(TAG,"getServerVerInfo");
 		try {
 			StringBuilder verInfoStr = new StringBuilder();
 			URL url = new URL(checkPath);
@@ -170,7 +171,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 				verInfoStr.append(line+"\n");
 			}
 			reader.close();
-			Log.d("abc","verInfoStr=>"+verInfoStr.toString());
+			Log.d(TAG,"verInfoStr=>"+verInfoStr.toString());
 			JSONArray array = new JSONArray(verInfoStr.toString());
 			if(array.length()>0){
 				JSONObject obj = array.getJSONObject(0);
@@ -179,11 +180,11 @@ public class UpdateAppPlugin extends CordovaPlugin {
 				downloadPath = obj.getString("apkPath");
 			}
 		} catch (Exception e) {
-			Log.d("abc","error:"+e.toString());
-			Log.d("abc","return false");
+			Log.d(TAG,"error:"+e.toString());
+			Log.d(TAG,"return false");
 			return false;
 		} 
-		Log.d("abc","getServerVerInfo return true");
+		Log.d(TAG,"getServerVerInfo return true");
     	return true;
     	
     }
@@ -192,7 +193,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
      * 显示软件更新对话框
      */
     private void showNoticeDialog() {
-    	Log.d("abc","showNoticeDialog");
+    	Log.d(TAG,"showNoticeDialog");
         // 构造对话框
     	cancelUpdate = false;
         AlertDialog.Builder builder = new Builder(mContext);
@@ -267,7 +268,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
             // 正在下载
             case DOWNLOAD:
                 // 设置进度条位置
-            	Log.d("abc","progress=>"+progress);
+            	Log.d(TAG,"progress=>"+progress);
                 mProgress.setProgress(progress);
                 break;
             case DOWNLOAD_FINISH:
@@ -292,7 +293,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 					// 获得存储卡的路径
 					String sdpath = Environment.getExternalStorageDirectory()+ "/";
 					mSavePath = sdpath + "download";
-					Log.d("abc","mSavePath:"+mSavePath);
+					Log.d(TAG,"mSavePath:"+mSavePath);
 					URL url = new URL(downloadPath);
 					// 创建连接
 					HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -332,9 +333,9 @@ public class UpdateAppPlugin extends CordovaPlugin {
 					is.close();
 				}
 			} catch (MalformedURLException e) {
-				Log.d("abc","error:"+e.toString());
+				Log.d(TAG,"error:"+e.toString());
 			} catch (IOException e) {
-				Log.d("abc","error:"+e.toString());
+				Log.d(TAG,"error:"+e.toString());
 			}
 			// 取消下载对话框显示
 			mDownloadDialog.dismiss();
