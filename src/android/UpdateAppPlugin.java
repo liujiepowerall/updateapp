@@ -276,7 +276,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
             request.setVisibleInDownloadsUi(true);  
 
             request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, newVerName); 
-            request.setTitle(mContext.getResources().getString(R.string.update_dialog_message_new_version) + newVerName); 
+            request.setTitle(mContext.getResources().getString(R.string.download_title_in_background) + newVerName); 
             long id = mDownloadManager.enqueue(request);
             mPrefs.edit().putLong(DL_ID, id).commit();   
     	}else{
