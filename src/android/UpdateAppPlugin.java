@@ -63,6 +63,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
     private SharedPreferences mPrefs;  
     private DownloadManager mDownloadManager;
     
+    private HttpURLConnection conn;
+    
     private static final String DL_ID = "downloadId";  
 	@Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
@@ -129,7 +131,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	    		}
     	    	}
     	    }   
-    	}, 2000);   	
+    	}, 3000);   	
     }
 
 
@@ -183,16 +185,14 @@ public class UpdateAppPlugin extends CordovaPlugin {
      */
     private boolean getServerVerInfo(){
     	Log.d(TAG,"getServerVerInfo");
-    	StringBuilder verInfoStr = new StringBuilder();
-		HttpURLConnection conn;
-		BufferedReader reader;
 		try {
+			StringBuilder verInfoStr = new StringBuilder();
 			URL url = new URL(checkPath);
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setConnectTimeout(5000);
 			conn.setReadTimeout(5000);
 			conn.connect();
-			reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"),8192);
+			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"),8192);
 			String line = null;
 			while((line = reader.readLine()) != null){
 				verInfoStr.append(line+"\n");
@@ -209,8 +209,6 @@ public class UpdateAppPlugin extends CordovaPlugin {
 			}
 		} catch (Exception e) {
 			Log.d(TAG,"error:"+e.toString());
-			if(reader != null)
-				reader.close();
 			if(conn != null)
 				conn.disconnect();
 			return false;
