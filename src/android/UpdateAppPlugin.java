@@ -91,7 +91,12 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	    private void queryDownloadStatus() {   
 	        DownloadManager.Query query = new DownloadManager.Query();   
 	        query.setFilterById(mPrefs.getLong(DL_ID, 0));   
-	        Cursor c = mDownloadManager.query(query);   
+	        Cursor c = mDownloadManager.query(query); 
+	        Log.d(TAG,"c.getCount=>"+c.getCount());
+	        if(c.getCount() == 0){
+	        	mPrefs.edit().clear().commit(); 
+	        	downloadApk();
+	        }
 	        if(c.moveToFirst()) {   
 	            int status = c.getInt(c.getColumnIndex(DownloadManager.COLUMN_STATUS));   
 	            switch(status) {   
@@ -256,11 +261,14 @@ public class UpdateAppPlugin extends CordovaPlugin {
     {
         // 启动新线程下载软件
         //new downloadApkThread().start();
-    	mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);
-    	mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
+    	if(mDownloadManager == null)
+    		mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);
+    	if(mPrefs == null)
+    		mPrefs = PreferenceManager.getDefaultSharedPreferences(mContext);
     	Log.e(TAG,"mPrefs.contains(DL_ID)=>"+mPrefs.contains(DL_ID));
     	if(!mPrefs.contains(DL_ID)){
-    		deleteFile();    		  
+    		deleteFile();  
+    		Log.d(TAG,"downloadPath=>"+downloadPath);
             Uri resource = Uri.parse(downloadPath);   
             DownloadManager.Request request = new DownloadManager.Request(resource);   
             request.setAllowedNetworkTypes(Request.NETWORK_MOBILE | Request.NETWORK_WIFI);   
