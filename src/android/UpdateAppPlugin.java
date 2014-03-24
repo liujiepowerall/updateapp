@@ -54,16 +54,6 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	private String newVerName;
 	/* APK 下载路径*/
 	private String  downloadPath;
-	/* 下载中 */
-    private static final int DOWNLOAD = 1;
-    /* 下载结束 */
-    private static final int DOWNLOAD_FINISH = 2;
-    /* 下载保存路径 */
-    private String mSavePath;
-    /* 记录进度条数量 */
-    private int progress;
-    /* 是否取消更新 */
-    private boolean cancelUpdate = false;
     /* 上下文*/
     private Context mContext;
     /* 更新进度条 */
@@ -129,13 +119,17 @@ public class UpdateAppPlugin extends CordovaPlugin {
      * 检查更新
      */
     private void checkAndUpdate(){
-    	if(getServerVerInfo()){  		
-    		int currentVerCode = getCurrentVerCode();
-    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
-    		if(newVerCode>currentVerCode){
-    			this.showNoticeDialog();
-    		}
-    	}
+    	new Handler().postDelayed(new Runnable(){   
+    	    public void run() {   
+    	    	if(getServerVerInfo()){  		
+    	    		int currentVerCode = getCurrentVerCode();
+    	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+    	    		if(newVerCode>currentVerCode){
+    	    			showNoticeDialog();
+    	    		}
+    	    	}
+    	    }   
+    	}, 2000);   	
     }
 
 
@@ -189,10 +183,10 @@ public class UpdateAppPlugin extends CordovaPlugin {
      */
     private boolean getServerVerInfo(){
     	Log.d(TAG,"getServerVerInfo");
-		try {
-			StringBuilder verInfoStr = new StringBuilder();
-			URL url = new URL(checkPath);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+    	StringBuilder verInfoStr = new StringBuilder();
+		URL url = new URL(checkPath);
+		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+		try {			
 			conn.setConnectTimeout(5000);
 			conn.setReadTimeout(5000);
 			conn.connect();
@@ -202,6 +196,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 				verInfoStr.append(line+"\n");
 			}
 			reader.close();
+			conn.disconnect();
 			Log.d(TAG,"verInfoStr=>"+verInfoStr.toString());
 			JSONArray array = new JSONArray(verInfoStr.toString());
 			if(array.length()>0){
@@ -212,6 +207,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 			}
 		} catch (Exception e) {
 			Log.d(TAG,"error:"+e.toString());
+			conn.disconnect();
 			return false;
 		} 
     	return true;
