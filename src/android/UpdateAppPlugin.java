@@ -184,9 +184,11 @@ public class UpdateAppPlugin extends CordovaPlugin {
     private boolean getServerVerInfo(){
     	Log.d(TAG,"getServerVerInfo");
     	StringBuilder verInfoStr = new StringBuilder();
-		URL url = new URL(checkPath);
-		HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-		try {			
+		URL url;
+		HttpURLConnection conn;
+		try {
+			url = new URL(checkPath);
+			conn = (HttpURLConnection) url.openConnection();
 			conn.setConnectTimeout(5000);
 			conn.setReadTimeout(5000);
 			conn.connect();
