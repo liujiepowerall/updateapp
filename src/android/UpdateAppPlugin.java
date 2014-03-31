@@ -234,9 +234,9 @@ public class UpdateAppPlugin extends CordovaPlugin {
         AlertDialog.Builder builder = new Builder(mContext);
         builder.setTitle(R.string.update_dialog_title);
         String message = mContext.getResources().getString(R.string.update_dialog_message_current_version)
-        				+ getCurrentVerCode()
+        				+ getCurrentVerName()
         				+ mContext.getResources().getString(R.string.update_dialog_message_new_version)
-        				+ newVerCode
+        				+ newVerName
         				+ mContext.getResources().getString(R.string.update_dialog_message_update_information)
         				+ updateInfo
         				+ mContext.getResources().getString(R.string.update_dialog_message_conform_update);
