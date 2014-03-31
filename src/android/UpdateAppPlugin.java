@@ -287,8 +287,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
             request.setNotificationVisibility (request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);  
             request.setVisibleInDownloadsUi(true);  
 
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, newVerName); 
-            request.setTitle(mContext.getResources().getString(R.string.download_title_in_background) + newVerName); 
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, this.mContext.getPackageName()); 
+            request.setTitle(mContext.getResources().getString(R.string.download_title_in_background) + this.mContext.getPackageName()); 
             long id = mDownloadManager.enqueue(request);
             mPrefs.edit().putLong(DL_ID, id).commit();   
     	}else{
@@ -298,7 +298,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     }
 
     public void  deleteFile(){
-    	File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), newVerName);
+    	File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.mContext.getPackageName());
 		if (apkfile.exists()) {
 			apkfile.delete();
 		}
