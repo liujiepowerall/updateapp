@@ -54,6 +54,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	private String newVerName;
 	/* APK 下载路径*/
 	private String  downloadPath;
+	/* APK 名称*/
+	private String  apkName;
 	/*更新明细*/
 	private String updateInfo;
     /* 上下文*/
@@ -214,6 +216,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 				newVerName = obj.getString("verName");
 				downloadPath = obj.getString("apkPath");
 				updateInfo = obj.getString("updateInfo");
+				apkName = obj.getString("apkName");
 			}
 		} catch (Exception e) {
 			Log.d(TAG,"error:"+e.toString());
@@ -287,8 +290,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
             request.setNotificationVisibility (request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED);  
             request.setVisibleInDownloadsUi(true);  
 
-            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, this.mContext.getPackageName()); 
-            request.setTitle(mContext.getResources().getString(R.string.download_title_in_background) + this.mContext.getPackageName()); 
+            request.setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, apkName); 
+            request.setTitle(mContext.getResources().getString(R.string.download_title_in_background) + apkName); 
             long id = mDownloadManager.enqueue(request);
             mPrefs.edit().putLong(DL_ID, id).commit();   
     	}else{
@@ -298,7 +301,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     }
 
     public void  deleteFile(){
-    	File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), this.mContext.getPackageName());
+    	File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), apkName);
 		if (apkfile.exists()) {
 			apkfile.delete();
 		}
@@ -307,7 +310,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	 * 安装APK文件
 	 */
 	private void installApk() {
-		File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), newVerName);
+		File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), apkName);
 		if (!apkfile.exists()) {
 			Log.d(TAG,"error:the file is not exists");
 			return;
