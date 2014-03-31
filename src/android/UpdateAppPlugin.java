@@ -54,6 +54,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	private String newVerName;
 	/* APK 下载路径*/
 	private String  downloadPath;
+	/*更新明细*/
+	private String updateInfo;
     /* 上下文*/
     private Context mContext;
     /* 更新进度条 */
@@ -211,6 +213,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 				newVerCode = obj.getInt("verCode");
 				newVerName = obj.getString("verName");
 				downloadPath = obj.getString("apkPath");
+				updateInfo = obj.getString("updateInfo");
 			}
 		} catch (Exception e) {
 			Log.d(TAG,"error:"+e.toString());
@@ -234,6 +237,8 @@ public class UpdateAppPlugin extends CordovaPlugin {
         				+ getCurrentVerCode()
         				+ mContext.getResources().getString(R.string.update_dialog_message_new_version)
         				+ newVerCode
+        				+ mContext.getResources().getString(R.string.update_dialog_message_update_information)
+        				+ updateInfo
         				+ mContext.getResources().getString(R.string.update_dialog_message_conform_update);
         builder.setMessage(message);
 
