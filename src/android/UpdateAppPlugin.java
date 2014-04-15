@@ -80,6 +80,11 @@ public class UpdateAppPlugin extends CordovaPlugin {
 			this.checkPath = args.getString(0);
 			android.util.Log.d(TAG,"checkPath=>"+checkPath);
 			checkAndUpdate();
+    }else if(action.equals("check")) {
+			callbackContext.success();
+			this.checkPath = args.getString(0);
+			android.util.Log.d(TAG,"checkPath=>"+checkPath);
+			check();
     }
         return false;
     }
@@ -136,14 +141,30 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	    		int currentVerCode = getCurrentVerCode();
     	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
     	    		if(newVerCode>currentVerCode){
-    	    			showNoticeDialog();
+    	    			showAutoUpdateNoticeDialog();
     	    		}
     	    	}
     	    }   
     	}, 3000);   	
     }
+		/**
+     * 检查
+     */
+    private void check(){
+    	if(getServerVerInfo()){  		
+	    		int currentVerCode = getCurrentVerCode();
+	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+	    		afterCheck(newVerCode == currentVerCode || newVerCode < currentVerCode);
+    	}  	
+    }
 
-
+		private void afterCheck(boolean isNewest){
+			if(isNewest){
+					showIsNewestNoticeDialog();
+			}else{
+					showAutoUpdateNoticeDialog();
+			}
+		}
 	/**
      * 获取应用当前版本代码
      * @param context
@@ -228,11 +249,28 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	
     }
     
+    private void showIsNewestNoticeDialog(){
+    	Log.d(TAG,"showIsNewestNoticeDialog");    	
+      AlertDialog.Builder builder = new Builder(mContext);
+      builder.setTitle(R.string.update_dialog_title);
+      String message = mContext.getResources().getString(R.string.update_dialog_message_newest_version)
+      				+ getCurrentVerName();
+      builder.setMessage(message);
+
+      builder.setNegativeButton(R.string.update_dialog_confirm_btn, new OnClickListener(){
+          public void onClick(DialogInterface dialog, int which){
+              dialog.dismiss();
+          }
+      });
+      Dialog noticeDialog = builder.create();
+      noticeDialog.show();
+    }
+    
     /**
-     * 显示软件更新对话框
+     * 显示软件更新对话框(自动)
      */
-    private void showNoticeDialog() {
-    	Log.d(TAG,"showNoticeDialog");
+    private void showAutoUpdateNoticeDialog() {
+    	Log.d(TAG,"showAutoUpdateNoticeDialog");
 
         AlertDialog.Builder builder = new Builder(mContext);
         builder.setTitle(R.string.update_dialog_title);
