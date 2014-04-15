@@ -7,7 +7,7 @@
     <string name="update_dialog_message_conform_update">\n是否更新？</string>
     <string name="update_dialog_update_btn">更新</string>
     <string name="update_dialog_cancel_btn">取消</string>
-    <string name="update_dialog_confirm_btn"确定</string>
+    <string name="update_dialog_confirm_btn">确定</string>
     <string name="download_title_in_background">正在下载：</string>
     <string name="update_dialog_message_newest_version">当前版本为最新版本：</string>
 </resources>
