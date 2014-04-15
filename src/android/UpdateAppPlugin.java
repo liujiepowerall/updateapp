@@ -41,7 +41,7 @@ import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import com.phonegap.ecommunity.R; 
+import com.phonegap.leho; 
 
 public class UpdateAppPlugin extends CordovaPlugin {
 
