@@ -118,9 +118,10 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	                break;   
 	            case DownloadManager.STATUS_SUCCESSFUL:   
 	                Log.d(TAG, "STATUS_SUCCESSFUL");  
-	                installApk();
 	                mContext.unregisterReceiver(receiver);  
 	                mPrefs.edit().clear().commit(); 
+	                //unInstallApplication(this.mContext.getPackageName());
+	                installApk();	                
 	                break;   
 	            case DownloadManager.STATUS_FAILED:   
 	                Log.d(TAG, "STATUS_FAILED");  
@@ -355,10 +356,18 @@ public class UpdateAppPlugin extends CordovaPlugin {
 		}
 		// 通过Intent安装APK文件
 		Intent i = new Intent(Intent.ACTION_VIEW);
+		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		i.setDataAndType(Uri.parse("file://" + apkfile.toString()),
 				"application/vnd.android.package-archive");
 		mContext.startActivity(i);
 	}
     
+	 public void unInstallApplication(String packageName){// Specific package Name Uninstall.
+		 	Log.d(TAG,"packageName=>"+packageName);
+	        //Uri packageURI = Uri.parse("package:com.CheckInstallApp");
+	        Uri packageURI = Uri.parse("package:"+packageName);
+	        Intent uninstallIntent = new Intent(Intent.ACTION_DELETE, packageURI);
+	        uninstallIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+	        mContext.startActivity(uninstallIntent); 
 
 }
