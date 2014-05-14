@@ -371,3 +371,4 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	        mContext.startActivity(uninstallIntent); 
 
 }
+}
