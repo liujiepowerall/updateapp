@@ -2,20 +2,14 @@ package com.powerall.plugin.updateapp;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -33,59 +27,48 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.Message;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.webkit.MimeTypeMap;
-import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import com.phonegap.leho.R; 
 
 public class UpdateAppPlugin extends CordovaPlugin {
 
  private final String TAG = "UpdateAppPlugin";
-	/*版本号检查路径*/
 	private String checkPath;
-	/* 新版本号*/
 	private int newVerCode;
-	/* 新版本名称 */
 	private String newVerName;
-	/* APK 下载路径*/
 	private String  downloadPath;
-	/* APK 名称*/
 	private String  apkName;
-	/*更新明细*/
 	private String updateInfo;
-    /* 上下文*/
-    private Context mContext;
-    /* 更新进度条 */
-    private ProgressBar mProgress;
-    private Dialog mDownloadDialog;
-    
+    private Context mContext;   
     private SharedPreferences mPrefs;  
     private DownloadManager mDownloadManager;
     
     private HttpURLConnection conn;
-    
+    //private String mAction;
     private static final String DL_ID = "downloadId";  
 	@Override
     public boolean execute(String action, JSONArray args, CallbackContext callbackContext) throws JSONException {
         this.mContext = cordova.getActivity();
         android.util.Log.d(TAG,"action=>"+action);
+        //mAction = action;
+        //this.checkPath = args.getString(0);
         
 		if (action.equals("checkAndUpdate")) {
 			callbackContext.success();
 			this.checkPath = args.getString(0);
 			android.util.Log.d(TAG,"checkPath=>"+checkPath);
 			checkAndUpdate();
-    }else if(action.equals("check")) {
-			callbackContext.success();
-			this.checkPath = args.getString(0);
-			android.util.Log.d(TAG,"checkPath=>"+checkPath);
-			check();
-    }
+	    }else if(action.equals("check")) {
+				callbackContext.success();
+				this.checkPath = args.getString(0);
+				android.util.Log.d(TAG,"checkPath=>"+checkPath);
+				check();
+	    }
+	    
+        //AutoUpdateApp updateApp = new AutoUpdateApp();
+        //updateApp.execute();
         return false;
     }
 
@@ -132,9 +115,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	            }   
 	        }  
 	    }  
-    /**
-     * 检查更新
-     */
+
     private void checkAndUpdate(){
     	new Handler().postDelayed(new Runnable(){   
     	    public void run() {   
@@ -146,31 +127,28 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	    		}
     	    	}
     	    }   
-    	}, 3000);   	
+    	}, 3000);  
     }
-		/**
-     * 检查
-     */
     private void check(){
-    	if(getServerVerInfo()){  		
-	    		int currentVerCode = getCurrentVerCode();
-	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
-	    		afterCheck(newVerCode == currentVerCode || newVerCode < currentVerCode);
-    	}  	
+    	new Handler().postDelayed(new Runnable(){   
+    	    public void run() {   
+		    	if(getServerVerInfo()){  		
+		    		int currentVerCode = getCurrentVerCode();
+		    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+		    		afterCheck(newVerCode == currentVerCode || newVerCode < currentVerCode);
+		    	} 
+    	    }
+    	},3000);
     }
-
-		private void afterCheck(boolean isNewest){
+    
+	private void afterCheck(boolean isNewest){
 			if(isNewest){
 					showIsNewestNoticeDialog();
 			}else{
 					showAutoUpdateNoticeDialog();
 			}
 		}
-	/**
-     * 获取应用当前版本代码
-     * @param context
-     * @return
-     */
+
     private int getCurrentVerCode(){
     	String packageName = this.mContext.getPackageName();
     	int currentVer = -1;
@@ -182,11 +160,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	return currentVer;
     }
     
-    /**
-     * 获取应用当前版本名称
-     * @param context
-     * @return
-     */
+
     private String getCurrentVerName(){
     	String packageName = this.mContext.getPackageName();
     	String currentVerName = "";
@@ -198,31 +172,24 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	return currentVerName;
     }
     
-    /**
-     * 获取应用名称
-     * @param context
-     * @return
-     */
+
     private String getAppName(){
     	//return this.mContext.getResources().getText(R.string.app_name).toString();
     	return "updateversion";
     }
     
-    /**
-     * 获取服务器上的版本信息
-     * @param path
-     * @return
-     * @throws Exception
-     */
+  
     private boolean getServerVerInfo(){
     	Log.d(TAG,"getServerVerInfo");
 		try {
+			android.util.Log.d(TAG,"checkPath=>"+checkPath);
 			StringBuilder verInfoStr = new StringBuilder();
 			URL url = new URL(checkPath);
 			conn = (HttpURLConnection) url.openConnection();
 			conn.setConnectTimeout(5000);
 			conn.setReadTimeout(5000);
 			conn.connect();
+			android.util.Log.d(TAG,"is connect");
 			BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream(),"UTF-8"),8192);
 			String line = null;
 			while((line = reader.readLine()) != null){
@@ -267,9 +234,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
       noticeDialog.show();
     }
     
-    /**
-     * 显示软件更新对话框(自动)
-     */
+   
     private void showAutoUpdateNoticeDialog() {
     	Log.d(TAG,"showAutoUpdateNoticeDialog");
 
@@ -301,12 +266,10 @@ public class UpdateAppPlugin extends CordovaPlugin {
         noticeDialog.show();
     }
 
-    /**
-     * 下载apk文件
-     */
+   
     private void downloadApk()
     {
-        // 启动新线程下载软件
+
         //new downloadApkThread().start();
     	if(mDownloadManager == null)
     		mDownloadManager = (DownloadManager)mContext.getSystemService(Context.DOWNLOAD_SERVICE);
@@ -345,16 +308,14 @@ public class UpdateAppPlugin extends CordovaPlugin {
 			apkfile.delete();
 		}
     }
-	/**
-	 * 安装APK文件
-	 */
+
 	private void installApk() {
 		File apkfile = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), apkName);
 		if (!apkfile.exists()) {
 			Log.d(TAG,"error:the file is not exists");
 			return;
 		}
-		// 通过Intent安装APK文件
+
 		Intent i = new Intent(Intent.ACTION_VIEW);
 		i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 		i.setDataAndType(Uri.parse("file://" + apkfile.toString()),
@@ -371,4 +332,39 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	        mContext.startActivity(uninstallIntent); 
 
 }
+	 /*
+	 class AutoUpdateApp extends AsyncTask<Void, Void, Boolean> {	
+		    
+		    @Override
+		    protected Boolean doInBackground(Void... params) {
+		        try {
+		        	boolean ok = getServerVerInfo();	
+		        	Log.d(TAG,"ok1=>"+ok);
+		            return ok;
+		        } catch (Exception e) {
+		        	Log.d(TAG,"error:"+e.toString());
+		            return false;
+		        }
+		    }
+	
+		    protected void onPostExecute(boolean ok) {
+		    	Log.d(TAG,"ok2=>"+ok);
+		    	Log.d(TAG,"mAction=>"+mAction);
+		       if(ok){
+		    	   if(mAction.equals("checkAndUpdate")){
+		    		   int currentVerCode = getCurrentVerCode();
+	    	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+	    	    		if(newVerCode>currentVerCode){
+	    	    			showAutoUpdateNoticeDialog();
+	    	    		}
+		    	   }else if(mAction.equals("check")){
+		    		   int currentVerCode = getCurrentVerCode();
+			    	   Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+			    	   afterCheck(newVerCode == currentVerCode || newVerCode < currentVerCode);
+		    	   }
+		    	   
+		       }
+	    }
+	}
+	*/
 }
