@@ -5,11 +5,13 @@ import java.io.File;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+
 import org.apache.cordova.CallbackContext;
 import org.apache.cordova.CordovaPlugin;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
 import android.app.Dialog;
@@ -27,9 +29,11 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
+
 import com.phonegap.leho.R; 
 
 public class UpdateAppPlugin extends CordovaPlugin {
@@ -117,6 +121,7 @@ public class UpdateAppPlugin extends CordovaPlugin {
 	    }  
 
     private void checkAndUpdate(){
+    	/*
     	new Handler().postDelayed(new Runnable(){   
     	    public void run() {   
     	    	if(getServerVerInfo()){  		
@@ -127,9 +132,25 @@ public class UpdateAppPlugin extends CordovaPlugin {
     	    		}
     	    	}
     	    }   
-    	}, 3000);  
+    	}, 3000);
+    	*/
+    	new Thread(new Runnable(){
+            @Override
+            public void run() {
+            	if(getServerVerInfo()){  		
+    	    		int currentVerCode = getCurrentVerCode();
+    	    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+    	    		if(newVerCode>currentVerCode){
+    	    			Looper.prepare();    	    			
+    	    			showAutoUpdateNoticeDialog();
+    	    			Looper.loop();
+    	    		}
+    	    	}
+            }
+        }).start();
     }
     private void check(){
+    	/*
     	new Handler().postDelayed(new Runnable(){   
     	    public void run() {   
 		    	if(getServerVerInfo()){  		
@@ -139,6 +160,19 @@ public class UpdateAppPlugin extends CordovaPlugin {
 		    	} 
     	    }
     	},3000);
+    	*/
+    	new Thread(new Runnable(){
+            @Override
+            public void run() {
+            	if(getServerVerInfo()){  		
+		    		int currentVerCode = getCurrentVerCode();
+		    		Log.d(TAG,"newVerCode:"+newVerCode+"===currentVerCode=>"+currentVerCode);
+		    		Looper.prepare();  
+		    		afterCheck(newVerCode == currentVerCode || newVerCode < currentVerCode);
+		    		Looper.loop();
+		    	} 
+            }
+        }).start();
     }
     
 	private void afterCheck(boolean isNewest){
